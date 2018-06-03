@@ -17,7 +17,7 @@ if (UNIX)
 
   find_package(Threads)
 
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -pthread")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z -pthread")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra")
 
   if (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -28,9 +28,22 @@ if (UNIX)
 
 endif (UNIX)
 
+include(ExternalProject)
+
+# download boost asio.
+
+set(boost_asio_install_folder "${CMAKE_BINARY_DIR}/boost-asio")
+set(boost_asio_include_folder "${boost_asio_install_folder}")
+ExternalProject_Add(boost_asio
+    URL https://dl.bintray.com/boostorg/release/1.67.0/source/boost_1_67_0.tar.gz
+    URL_HASH SHA256=8aa4e330c870ef50a896634c931adf468b21f8a69b77007e45c444151229f665
+    SOURCE_DIR ${boost_asio_install_folder}
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND "")
+
 # download and build googletest.
 
-include(ExternalProject)
 set(googletest_install_folder "${CMAKE_BINARY_DIR}/googletest-install")
 set(googletest_include_folder "${googletest_install_folder}/include")
 set(googletest_static_library "${googletest_install_folder}/lib/libgtest.a")
@@ -57,8 +70,9 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
 endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
 
 add_executable(${STRM_TARGET} ${strm_test_sources})
+target_include_directories(${STRM_TARGET} PUBLIC ${boost_asio_include_folder})
 target_include_directories(${STRM_TARGET} PUBLIC ${strm_include_folder})
 target_include_directories(${STRM_TARGET} PUBLIC ${googletest_include_folder})
 target_link_libraries(${STRM_TARGET} ${googletest_static_library})
-add_dependencies(${STRM_TARGET} googletest)
+add_dependencies(${STRM_TARGET} boost_asio googletest)
 install(TARGETS ${STRM_TARGET} DESTINATION test)
