@@ -20,11 +20,8 @@ if (UNIX)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z -pthread")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra")
 
-  if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -D_DEBUG -O0")
-  elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNDEBUG -O3")
-  endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
+  set(CXX_FLAGS_DEBUG "-g -D_DEBUG -O0")
+  set(CXX_FLAGS_RELEASE  "-DNDEBUG -O3")
 
 endif (UNIX)
 
@@ -32,11 +29,16 @@ include(ExternalProject)
 
 # download boost asio.
 
+if (NOT STRM_BOOST_VERSION)
+  set(STRM_BOOST_VERSION 1.67.0)
+endif (NOT STRM_BOOST_VERSION)
+
+string(REPLACE "." "_" STRM_BOOST_VERSION_UNDERSCORE ${STRM_BOOST_VERSION})
+
 set(boost_asio_install_folder "${CMAKE_BINARY_DIR}/boost-asio")
 set(boost_asio_include_folder "${boost_asio_install_folder}")
 ExternalProject_Add(boost_asio
-    URL https://dl.bintray.com/boostorg/release/1.67.0/source/boost_1_67_0.tar.gz
-    URL_HASH SHA256=8aa4e330c870ef50a896634c931adf468b21f8a69b77007e45c444151229f665
+    URL https://dl.bintray.com/boostorg/release/${STRM_BOOST_VERSION}/source/boost_${STRM_BOOST_VERSION_UNDERSCORE}.tar.gz
     SOURCE_DIR ${boost_asio_install_folder}
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
@@ -63,16 +65,18 @@ file(GLOB_RECURSE strm_test_sources
     "${strm_test_source_folder}/*.h"
     "${strm_test_source_folder}/*.cpp")
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-  set(STRM_TARGET strm_test_debug)
-elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
-  set(STRM_TARGET strm_test_release)
-endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
+include_directories(${boost_asio_include_folder})
+include_directories(${strm_include_folder})
+include_directories(${googletest_include_folder})
 
-add_executable(${STRM_TARGET} ${strm_test_sources})
-target_include_directories(${STRM_TARGET} PUBLIC ${boost_asio_include_folder})
-target_include_directories(${STRM_TARGET} PUBLIC ${strm_include_folder})
-target_include_directories(${STRM_TARGET} PUBLIC ${googletest_include_folder})
-target_link_libraries(${STRM_TARGET} ${googletest_static_library})
-add_dependencies(${STRM_TARGET} boost_asio googletest)
-install(TARGETS ${STRM_TARGET} DESTINATION test)
+add_executable(strm_test_debug ${strm_test_sources})
+set_target_properties(strm_test_debug PROPERTIES COMPILE_FLAGS ${CXX_FLAGS_DEBUG})
+target_link_libraries(strm_test_debug ${googletest_static_library})
+add_dependencies(strm_test_debug boost_asio googletest)
+install(TARGETS strm_test_debug DESTINATION test)
+
+add_executable(strm_test_release ${strm_test_sources})
+set_target_properties(strm_test_release PROPERTIES COMPILE_FLAGS ${CXX_FLAGS_RELEASE})
+target_link_libraries(strm_test_release ${googletest_static_library})
+add_dependencies(strm_test_release boost_asio googletest)
+install(TARGETS strm_test_release DESTINATION test)

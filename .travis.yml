@@ -12,7 +12,6 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - ninja-build
             - g++-7
       env: MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
     - compiler: clang
@@ -22,7 +21,6 @@ matrix:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-trusty-3.9
           packages:
-            - ninja-build
             - g++-5 # we need this one for the libstdc++.
             - clang-3.9
       env: MATRIX_EVAL="CC=clang-3.9 && CXX=clang++-3.9"
@@ -33,7 +31,6 @@ matrix:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-trusty-5.0
           packages:
-            - ninja-build
             - g++-7 # we need this one for the libstdc++.
             - clang-5.0
       env: MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
@@ -42,5 +39,8 @@ before_install:
   - eval "${MATRIX_EVAL}"
 
 script:
-  - make check_debug
-  - make check_release
+  - mkdir build ; cd build
+  - cmake ..
+  - cmake --build .
+  - ./strm_test_debug
+  - ./strm_test_release

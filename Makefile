@@ -1,10 +1,10 @@
 BUILD_FOLDER=$(CURDIR)/build
-INSTALL_FOLDER=$(CURDIR)/install
+CMAKE_GENERATOR="Ninja"
 
-CMAKE=cmake
-MY_CMAKE_FLAGS=-DCMAKE_INSTALL_PREFIX="$(INSTALL_FOLDER)" -G "Ninja"
+export CC=clang
+export CXX=clang++
 
-default: debug
+build: _call_cmake
 
 check: check_debug
 
@@ -13,25 +13,15 @@ docs:
 	@echo "Documentation index at ./doxygen/html/index.html"
 
 clean:
-	@rm -Rf $(BUILD_FOLDER) $(INSTALL_FOLDER)
+	@rm -Rf $(BUILD_FOLDER)
 
-debug: MY_BUILD_FOLDER=$(BUILD_FOLDER)/debug
-debug: MY_CMAKE_FLAGS+=-DCMAKE_BUILD_TYPE=Debug
-debug: _build
+check_debug: build
+	@$(BUILD_FOLDER)/strm_test_debug
 
-release: MY_BUILD_FOLDER=$(BUILD_FOLDER)/release
-release: MY_CMAKE_FLAGS+=-DCMAKE_BUILD_TYPE=Release
-release: _build
-
-_build: _call_cmake
-	@cd $(MY_BUILD_FOLDER) && ninja install
+check_release: build
+	@$(BUILD_FOLDER)/strm_test_release
 
 _call_cmake:
-	@mkdir -p $(MY_BUILD_FOLDER)
-	cd $(MY_BUILD_FOLDER) && $(CMAKE) $(MY_CMAKE_FLAGS) $(CURDIR)
-
-check_debug: debug
-	@$(INSTALL_FOLDER)/test/strm_test_debug
-
-check_release: release
-	@$(INSTALL_FOLDER)/test/strm_test_release
+	@mkdir -p $(BUILD_FOLDER)
+	@cd $(BUILD_FOLDER) && cmake -G $(CMAKE_GENERATOR) $(CURDIR)
+	@cd $(BUILD_FOLDER) && cmake --build .
