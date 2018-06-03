@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <memory>
+#include <random>
 
 TEST(encoder, big_message) {
   using udp_packet = strm::udp_packet;
