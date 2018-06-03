@@ -1,5 +1,7 @@
 #pragma once
 
+#include <boost/asio/buffer.hpp>
+
 #include <array>
 #include <cassert>
 #include <cstdint>
@@ -95,6 +97,10 @@ namespace strm {
       assert(length <= message_size_in_bytes);
       std::memcpy(&_data[DATA], buffer, length);
       _data[SIZE] = length;
+    }
+
+    boost::asio::const_buffer buffer() const {
+      return {reinterpret_cast<const void *>(this), sizeof(*this)};
     }
 
   private:

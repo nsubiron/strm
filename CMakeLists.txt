@@ -19,6 +19,7 @@ if (UNIX)
 
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z -pthread")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra")
+  set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -latomic")
 
   set(CXX_FLAGS_DEBUG "-g -D_DEBUG -O0")
   set(CXX_FLAGS_RELEASE  "-DNDEBUG -O3")
@@ -28,6 +29,8 @@ endif (UNIX)
 include(ExternalProject)
 
 # download boost asio.
+
+add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY) # To avoid compiling boost_system.
 
 if (NOT STRM_BOOST_VERSION)
   set(STRM_BOOST_VERSION 1.67.0)
