@@ -114,7 +114,7 @@ namespace strm {
     // This is call for each new query, calls the callback function.
     auto handle_query = [=](const error_code &ec, size_t){
       if (!ec || ec == boost::asio::error::message_size) {
-         callback(session);
+        callback(session);
       } else {
         std::cerr << "Error handling query from " << session->_remote_endpoint
                   << ": " << ec.message() << "\n";
@@ -138,8 +138,8 @@ namespace strm {
   void async_udp_server::enqueue_response(shared_session session, std::shared_ptr<T> data) {
 
     // Explicitly capturing both objects we ensure they live as long as this
-    // lambda. As far as I understood, the standard guarantees that explicit
-    // captures are not optimized away.
+    // lambda. The standard guarantees that explicit captures are not optimized
+    // away.
     auto handle_sent = [session, data](const error_code &ec, size_t) {
       if (ec) {
         std::cerr << "Error sending response to " << session->_remote_endpoint
