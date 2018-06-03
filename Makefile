@@ -8,6 +8,13 @@ default: debug
 
 check: check_debug
 
+docs:
+	@doxygen
+	@echo "Documentation index at ./doxygen/html/index.html"
+
+clean:
+	@rm -Rf $(BUILD_FOLDER) $(INSTALL_FOLDER)
+
 debug: MY_BUILD_FOLDER=$(BUILD_FOLDER)/debug
 debug: MY_CMAKE_FLAGS+=-DCMAKE_BUILD_TYPE=Debug
 debug: _build
@@ -22,9 +29,6 @@ _build: _call_cmake
 _call_cmake:
 	@mkdir -p $(MY_BUILD_FOLDER)
 	cd $(MY_BUILD_FOLDER) && $(CMAKE) $(MY_CMAKE_FLAGS) $(CURDIR)
-
-clean:
-	@rm -Rf $(BUILD_FOLDER) $(INSTALL_FOLDER)
 
 check_debug: debug
 	@$(INSTALL_FOLDER)/test/strm_test_debug
