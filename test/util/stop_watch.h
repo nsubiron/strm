@@ -2,16 +2,18 @@
 
 #include <chrono>
 
+namespace util {
+
 namespace detail {
 
   template <typename CLOCK>
-  class StopWatchTmpl {
+  class stop_watch_tmpl {
     static_assert(CLOCK::is_steady, "The StopWatch's clock must be steady");
   public:
 
     using clock = CLOCK;
 
-    StopWatchTmpl() : _start(clock::now()), _end(), _is_running(true) {}
+    stop_watch_tmpl() : _start(clock::now()), _end(), _is_running(true) {}
 
     void Restart() {
       _is_running = true;
@@ -47,4 +49,6 @@ namespace detail {
 
 } // detail
 
-using StopWatch = detail::StopWatchTmpl<std::chrono::steady_clock>;
+  using stop_watch = detail::stop_watch_tmpl<std::chrono::steady_clock>;
+
+} // namespace util

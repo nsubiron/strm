@@ -1,7 +1,7 @@
 #include <strm/encoder.h>
 
-#include "message.h"
-#include "stop_watch.h"
+#include "util/message.h"
+#include "util/stop_watch.h"
 
 #include <gtest/gtest.h>
 
@@ -12,7 +12,7 @@
 TEST(encoder, big_message) {
   using udp_packet = strm::udp_packet;
 
-  auto message = message::make_random(1920u * 1080u * 4u);
+  auto message = util::message::make_random(1920u * 1080u * 4u);
 
   const auto expected_number_of_packets =
       1u + ((message.size() - 1u) / udp_packet::numeric_limits::packet_capacity());
@@ -23,7 +23,7 @@ TEST(encoder, big_message) {
   // encode.
   {
     strm::encoder enc;
-    StopWatch sw;
+    util::stop_watch sw;
 
     auto splitter = enc.split_message(message.buffer());
     ASSERT_GT(splitter.number_of_packets(), 0u);
@@ -45,12 +45,12 @@ TEST(encoder, big_message) {
   }
 
   // decode.
-  message::Message result;
+  util::message result;
   {
     const auto message_size = packets[0u].message_size();
     ASSERT_EQ(packets[0u].total_number_of_packets(), packets.size());
 
-    result = message::make_empty(message_size);
+    result = util::message::make_empty(message_size);
     unsigned char * const begin = result.data();
 
     for (const auto &pack : packets) {

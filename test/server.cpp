@@ -1,8 +1,8 @@
 #include <strm/server.h>
 #include <strm/client.h>
 
-#include "stop_watch.h"
-#include "thread_group.h"
+#include "util/stop_watch.h"
+#include "util/thread_group.h"
 
 #include <gtest/gtest.h>
 
@@ -11,7 +11,7 @@
 using namespace std::chrono_literals;
 
 TEST(server, write_to_stream) {
-  thread_group threads;
+  util::thread_group threads;
 
   constexpr auto number_of_messages = 2000u;
 
@@ -49,7 +49,7 @@ TEST(server, write_to_stream) {
 }
 
 TEST(server, write_to_multiple_streams) {
-  thread_group threads;
+  util::thread_group threads;
 
   constexpr auto number_of_clients = 12u;
   constexpr auto number_of_messages = 2000u;
