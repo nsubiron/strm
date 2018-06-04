@@ -10,6 +10,7 @@
 #include <iostream>
 
 namespace strm {
+namespace detail {
 
   class udp_session;
 
@@ -31,7 +32,7 @@ namespace strm {
 
     using endpoint = boost::asio::ip::udp::endpoint;
     using error_code = boost::system::error_code;
-    using shared_session = std::shared_ptr<udp_session>;
+    using shared_session = std::shared_ptr<udp_session>; /// @todo make const
 
     async_udp_server(boost::asio::io_service &io_service, endpoint ep)
       : _socket(io_service, std::move(ep)),
@@ -153,4 +154,5 @@ namespace strm {
         _strand.wrap(handle_sent));
   }
 
+} // namespace detail
 } // namespace strm

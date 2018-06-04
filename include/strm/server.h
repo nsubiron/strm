@@ -1,9 +1,8 @@
 #pragma once
 
-#include "async_udp_server.h"
-#include "dispatcher.h"
-#include "encoder.h"
-#include "session.h"
+#include "detail/async_udp_server.h"
+#include "detail/dispatcher.h"
+
 #include "stream.h"
 
 #include <memory>
@@ -14,7 +13,7 @@ namespace strm {
   class server {
   public:
 
-    using endpoint = async_udp_server::endpoint;
+    using endpoint = detail::async_udp_server::endpoint;
 
     explicit server(boost::asio::io_service &io_service, endpoint ep);
 
@@ -22,24 +21,19 @@ namespace strm {
       : server(io_service, endpoint(boost::asio::ip::udp::v4(), port)) {}
 
     stream make_stream() {
-      return _dispatcher.make_stream(_encoder);
+      return _dispatcher.make_stream();
     }
 
   private:
 
-    async_udp_server _server;
+    detail::async_udp_server _server;
 
-    dispatcher _dispatcher;
-
-    std::shared_ptr<encoder> _encoder;
+    detail::dispatcher _dispatcher;
   };
 
   server::server(boost::asio::io_service &io_service, endpoint ep)
-    : _server(io_service, std::move(ep)),
-      _encoder(std::make_shared<encoder>()) {
-    _server.listen([this](auto active_session){
-      _dispatcher.register_session(std::move(active_session));
-    });
+    : _server(io_service, std::move(ep)) {
+    _server.listen([this](auto session){ _dispatcher.register_session(session); });
   }
 
 } // namespace strm

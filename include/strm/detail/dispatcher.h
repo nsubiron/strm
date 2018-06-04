@@ -1,7 +1,7 @@
 #pragma once
 
 #include "session.h"
-#include "stream.h"
+#include "stream_state.h"
 
 #include <exception>
 #include <memory>
@@ -9,18 +9,19 @@
 #include <unordered_map>
 
 namespace strm {
+namespace detail {
 
   class dispatcher {
   public:
 
-    stream make_stream(std::shared_ptr<encoder> buffer_encoder) {
+    std::shared_ptr<stream_state> make_stream() {
       std::lock_guard<std::mutex> guard(_mutex);
       auto token = ++_next_token; // token zero never happens (unless overflow...).
-      auto ptr = std::make_shared<stream_internal>(token, std::move(buffer_encoder));
+      auto ptr = std::make_shared<stream_state>(token);
       auto result = _stream_map.emplace(std::make_pair(token, ptr));
       if (!result.second)
         throw std::runtime_error("failed to create stream!");
-      return stream{ptr};
+      return ptr;
     }
 
     void register_session(shared_session session) {
@@ -44,7 +45,8 @@ namespace strm {
 
     token_type _next_token = 0u;
 
-    std::unordered_map<token_type, std::shared_ptr<stream_internal>> _stream_map;
+    std::unordered_map<token_type, std::shared_ptr<stream_state>> _stream_map;
   };
 
+} // namespace detail
 } // namespace strm

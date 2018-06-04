@@ -10,6 +10,7 @@
 #include <type_traits>
 
 namespace strm {
+namespace detail {
 
   /// Many udp_packets compose a message.
   class udp_packet {
@@ -108,7 +109,8 @@ namespace strm {
     std::array<size_type, total_number_of_units> _data;
   };
 
-} // namespace strm
+  static_assert(sizeof(::strm::detail::udp_packet) == 512u, "Invalid udp_packet size!");
+  static_assert(std::is_trivial<::strm::detail::udp_packet>::value, "Try to keep udp_packet a trivial type");
 
-static_assert(sizeof(::strm::udp_packet) == 512u, "Invalid udp_packet size!");
-static_assert(std::is_trivial<::strm::udp_packet>::value, "Try to keep udp_packet a trivial type");
+} // namespace detail
+} // namespace strm

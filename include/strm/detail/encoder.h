@@ -6,6 +6,7 @@
 #include <exception>
 
 namespace strm {
+namespace detail {
 
   class encoder {
   public:
@@ -21,4 +22,5 @@ namespace strm {
     std::atomic<udp_packet::size_type> _next_message_id{0u};
   };
 
+} // namespace detail
 } // namespace strm

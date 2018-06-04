@@ -1,4 +1,4 @@
-#include <strm/encoder.h>
+#include <strm/detail/encoder.h>
 
 #include "util/message.h"
 #include "util/stop_watch.h"
@@ -10,7 +10,7 @@
 #include <random>
 
 TEST(encoder, big_message) {
-  using udp_packet = strm::udp_packet;
+  using udp_packet = strm::detail::udp_packet;
 
   auto message = util::message::make_random(1920u * 1080u * 4u);
 
@@ -22,7 +22,7 @@ TEST(encoder, big_message) {
 
   // encode.
   {
-    strm::encoder enc;
+    strm::detail::encoder enc;
     util::stop_watch sw;
 
     auto splitter = enc.split_message(message.buffer());

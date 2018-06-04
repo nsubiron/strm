@@ -9,6 +9,7 @@
 #include <array>
 
 namespace strm {
+namespace detail {
 
   /// Not yet async, barely a client.
   class async_udp_client {
@@ -45,5 +46,6 @@ namespace strm {
     boost::asio::ip::udp::socket _socket;
   };
 
+} // namespace detail
 } // namespace strm
 

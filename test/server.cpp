@@ -36,7 +36,7 @@ TEST(server, write_to_stream) {
     strm::client client(io_service, 8080u);
     client.subscribe_to_stream(token);
     for (auto i = 0u; i < number_of_messages; ++i) {
-      strm::udp_packet packet;
+      strm::detail::udp_packet packet;
       ASSERT_TRUE(client.read_packet(packet));
       std::string message(static_cast<const char *>(packet.data()));
       ASSERT_EQ(message, "Hello!");
@@ -89,7 +89,7 @@ TEST(server, write_to_multiple_streams) {
       strm::client client(io_service, 8080u);
       client.subscribe_to_stream(token);
       for (auto i = 0u; i < number_of_messages; ++i) {
-        strm::udp_packet packet;
+        strm::detail::udp_packet packet;
         ASSERT_TRUE(client.read_packet(packet));
         std::string message(
             static_cast<const char *>(packet.data()),
