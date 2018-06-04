@@ -5,6 +5,7 @@ dist: trusty
 sudo: false
 
 matrix:
+  fast_finish: true
   include:
     - compiler: gcc
       addons:
@@ -13,7 +14,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-7
-      env: MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+      env: MATRIX_EVAL="CC=gcc-7 && CXX=g++-7 && ENABLE_COVERAGE=1"
     - compiler: clang
       addons:
         apt:
@@ -23,7 +24,7 @@ matrix:
           packages:
             - g++-5 # we need this one for the libstdc++.
             - clang-3.9
-      env: MATRIX_EVAL="CC=clang-3.9 && CXX=clang++-3.9"
+      env: MATRIX_EVAL="CC=clang-3.9 && CXX=clang++-3.9 && ENABLE_COVERAGE=0"
     - compiler: clang
       addons:
         apt:
@@ -33,14 +34,21 @@ matrix:
           packages:
             - g++-7 # we need this one for the libstdc++.
             - clang-5.0
-      env: MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
+      env: MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0 && ENABLE_COVERAGE=1"
 
 before_install:
+  - pip install --user cpp-coveralls
   - eval "${MATRIX_EVAL}"
 
 script:
   - mkdir build ; cd build
-  - cmake ..
+  - cmake -DCOVERAGE=${ENABLE_COVERAGE} ..
   - cmake --build .
   - ./strm_test_debug
   - ./strm_test_release
+
+after_success:
+  - |
+    if [[ "${ENABLE_COVERAGE}" == "1" ]] ; then
+      coveralls --root . -E ".*gtest.*" -E ".*CMakeFiles.*"
+    fi

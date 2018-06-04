@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.5.0)
 project(strm-test)
 
+include(ExternalProject)
+
 set(strm_include_folder "${PROJECT_SOURCE_DIR}/include")
 set(strm_test_source_folder "${PROJECT_SOURCE_DIR}/test")
 
@@ -25,8 +27,6 @@ if (UNIX)
   set(CXX_FLAGS_RELEASE  "-DNDEBUG -O3")
 
 endif (UNIX)
-
-include(ExternalProject)
 
 # download boost asio.
 
@@ -62,7 +62,7 @@ ExternalProject_Add(googletest
     BUILD_COMMAND ${CMAKE_COMMAND} --build . --target install
     BUILD_BYPRODUCTS ${googletest_static_library})
 
-# strm unit tests target.
+# strm unit tests targets.
 
 file(GLOB_RECURSE strm_test_sources
     "${strm_test_source_folder}/*.h"
@@ -74,12 +74,22 @@ include_directories(${googletest_include_folder})
 
 add_executable(strm_test_debug ${strm_test_sources})
 set_target_properties(strm_test_debug PROPERTIES COMPILE_FLAGS ${CXX_FLAGS_DEBUG})
-target_link_libraries(strm_test_debug ${googletest_static_library})
+target_link_libraries(strm_test_debug PRIVATE ${googletest_static_library})
 add_dependencies(strm_test_debug boost_asio googletest)
 install(TARGETS strm_test_debug DESTINATION test)
 
 add_executable(strm_test_release ${strm_test_sources})
 set_target_properties(strm_test_release PROPERTIES COMPILE_FLAGS ${CXX_FLAGS_RELEASE})
-target_link_libraries(strm_test_release ${googletest_static_library})
+target_link_libraries(strm_test_release PRIVATE ${googletest_static_library})
 add_dependencies(strm_test_release boost_asio googletest)
 install(TARGETS strm_test_release DESTINATION test)
+
+# coverage support.
+
+set(COVERAGE OFF CACHE BOOL "Coverage")
+
+if (COVERAGE)
+  message(STATUS "Building with coverage support")
+  target_compile_options(strm_test_debug PRIVATE --coverage)
+  target_link_libraries(strm_test_debug PRIVATE --coverage)
+endif (COVERAGE)
