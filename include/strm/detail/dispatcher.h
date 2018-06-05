@@ -1,7 +1,7 @@
 #pragma once
 
-#include "session.h"
-#include "stream_state.h"
+#include "strm/detail/session.h"
+#include "strm/detail/stream_state.h"
 
 #include <exception>
 #include <memory>
@@ -14,11 +14,14 @@ namespace detail {
   class dispatcher {
   public:
 
+    explicit dispatcher(strm_asio::endpoint_token ep)
+      : _cached_token{0u, ep} {}
+
     std::shared_ptr<stream_state> make_stream() {
       std::lock_guard<std::mutex> guard(_mutex);
-      auto token = ++_next_token; // token zero never happens (unless overflow...).
-      auto ptr = std::make_shared<stream_state>(token);
-      auto result = _stream_map.emplace(std::make_pair(token, ptr));
+      ++_cached_token.stream_id; // id zero only happens in overflow.
+      auto ptr = std::make_shared<stream_state>(_cached_token);
+      auto result = _stream_map.emplace(std::make_pair(_cached_token.stream_id, ptr));
       if (!result.second)
         throw std::runtime_error("failed to create stream!");
       return ptr;
@@ -33,7 +36,7 @@ namespace detail {
         search->second->set_session(std::move(session));
       } else {
         std::cerr << "Invalid session token " << session->token()
-                  << ", no stream available with that token\n";
+                  << ", no stream available with that id\n";
       }
     }
 
@@ -43,9 +46,11 @@ namespace detail {
     // created too often.
     std::mutex _mutex;
 
-    token_type _next_token = 0u;
+    token_type _cached_token;
 
-    std::unordered_map<token_type, std::shared_ptr<stream_state>> _stream_map;
+    std::unordered_map<
+        strm::token_type::stream_id_type,
+        std::shared_ptr<stream_state>> _stream_map;
   };
 
 } // namespace detail

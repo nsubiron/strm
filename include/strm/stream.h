@@ -10,6 +10,10 @@
 
 namespace strm {
 
+namespace low_level {
+  class server;
+}
+
   class stream {
   public:
 
@@ -37,7 +41,7 @@ namespace strm {
 
   private:
 
-    friend class server;
+    friend class strm::low_level::server;
 
     stream(std::shared_ptr<detail::stream_state> state)
       : _shared_state(std::move(state)) {

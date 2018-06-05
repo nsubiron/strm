@@ -1,40 +1,49 @@
 #pragma once
 
-#include "detail/async_udp_server.h"
-#include "detail/dispatcher.h"
+#include "strm/detail/thread_group.h"
+#include "strm/low_level/server.h"
 
-#include "stream.h"
+#include <boost/asio/io_service.hpp>
 
-#include <memory>
-#include <mutex>
+#include <cstdint>
+#include <string>
 
 namespace strm {
 
   class server {
   public:
 
-    using endpoint = detail::async_udp_server::endpoint;
+    explicit server(uint16_t port)
+      : _server(_io_service, port) {}
 
-    explicit server(boost::asio::io_service &io_service, endpoint ep);
-
-    explicit server(boost::asio::io_service &io_service, uint16_t port)
-      : server(io_service, endpoint(boost::asio::ip::udp::v4(), port)) {}
+    explicit server(const std::string &address, uint16_t port)
+      : _server(_io_service, address, port) {}
 
     stream make_stream() {
-      return _dispatcher.make_stream();
+      return _server.make_stream();
+    }
+
+    void run() {
+      _io_service.run();
+    }
+
+    void async_run(std::size_t worker_threads) {
+      _workers.create_threads(worker_threads, [this](){ run(); });
+    }
+
+    void stop() {
+      _io_service.stop();
+      _workers.join_all();
     }
 
   private:
 
-    detail::async_udp_server _server;
+    boost::asio::io_service _io_service;
 
-    detail::dispatcher _dispatcher;
+    strm::low_level::server _server;
+
+    strm::detail::thread_group _workers;
   };
-
-  server::server(boost::asio::io_service &io_service, endpoint ep)
-    : _server(io_service, std::move(ep)) {
-    _server.listen([this](auto session){ _dispatcher.register_session(session); });
-  }
 
 } // namespace strm
 

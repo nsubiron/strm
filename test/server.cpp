@@ -1,8 +1,9 @@
-#include <strm/server.h>
 #include <strm/client.h>
+#include <strm/server.h>
+
+#include <strm/detail/thread_group.h>
 
 #include "util/stop_watch.h"
-#include "util/thread_group.h"
 
 #include <gtest/gtest.h>
 
@@ -11,12 +12,12 @@
 using namespace std::chrono_literals;
 
 TEST(server, write_to_stream) {
-  util::thread_group threads;
+  strm::detail::thread_group threads;
 
   constexpr auto number_of_messages = 2000u;
 
   boost::asio::io_service io_service;
-  strm::server server(io_service, 8080u);
+  strm::low_level::server server(io_service, 8080u);
   strm::stream stream = server.make_stream();
 
   const auto token = stream.get_token();
@@ -49,13 +50,13 @@ TEST(server, write_to_stream) {
 }
 
 TEST(server, write_to_multiple_streams) {
-  util::thread_group threads;
+  strm::detail::thread_group threads;
 
   constexpr auto number_of_clients = 12u;
   constexpr auto number_of_messages = 2000u;
 
   boost::asio::io_service io_service;
-  strm::server server(io_service, 8080u);
+  strm::low_level::server server(io_service, 8080u);
 
   std::array<strm::token_type, number_of_clients> tokens;
   std::vector<strm::stream> streams;

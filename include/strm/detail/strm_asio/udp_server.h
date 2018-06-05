@@ -1,7 +1,5 @@
 #pragma once
 
-#include "token.h"
-
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/io_service_strand.hpp>
 #include <boost/asio/ip/udp.hpp>
@@ -11,30 +9,31 @@
 
 namespace strm {
 namespace detail {
+namespace strm_asio {
 
   class udp_session;
 
   /// ==========================================================================
-  /// -- async_udp_server ------------------------------------------------------
+  /// -- udp_server ------------------------------------------------------------
   /// ==========================================================================
 
   /// An asynchronous UDP stream server.
   ///
   /// Call `listen` to start listening for queries at the given endpoint. On
   /// each query (which is expected to consist on a single message of type
-  /// `token_type`), a new `udp_session` is activated and passed to the
-  /// call-back function provided in `listen`. The session object provides an
+  /// `uint32_t`), a new `udp_session` is activated and passed to the call-back
+  /// function provided in `listen`. The session object provides an
   /// `enqueue_response` function for writing data to the socket.
   ///
   /// @warning sessions should not outlive the server.
-  class async_udp_server {
+  class udp_server {
   public:
 
     using endpoint = boost::asio::ip::udp::endpoint;
     using error_code = boost::system::error_code;
     using shared_session = std::shared_ptr<udp_session>; /// @todo make const
 
-    async_udp_server(boost::asio::io_service &io_service, endpoint ep)
+    udp_server(boost::asio::io_service &io_service, endpoint ep)
       : _socket(io_service, std::move(ep)),
         _strand(io_service) {}
 
@@ -78,10 +77,10 @@ namespace detail {
   class udp_session : public std::enable_shared_from_this<udp_session> {
   public:
 
-    explicit udp_session(async_udp_server &parent) : _parent(parent) {}
+    explicit udp_session(udp_server &parent) : _parent(parent) {}
 
     /// Retrieve current session's token.
-    token_type token() const {
+    uint32_t token() const {
       return _token;
     }
 
@@ -95,21 +94,21 @@ namespace detail {
 
   private:
 
-    friend class async_udp_server;
+    friend class udp_server;
 
-    async_udp_server &_parent;
+    udp_server &_parent;
 
-    async_udp_server::endpoint _remote_endpoint;
+    udp_server::endpoint _remote_endpoint;
 
-    token_type _token;
+    uint32_t _token;
   };
 
   /// ==========================================================================
-  /// -- async_udp_server implementations --------------------------------------
+  /// -- udp_server implementations --------------------------------------------
   /// ==========================================================================
 
   template <typename F>
-  void async_udp_server::open_session(F callback) {
+  void udp_server::open_session(F callback) {
     auto session = std::make_shared<udp_session>(*this);
 
     // This is call for each new query, calls the callback function.
@@ -136,7 +135,7 @@ namespace detail {
   }
 
   template <typename T>
-  void async_udp_server::enqueue_response(shared_session session, std::shared_ptr<T> data) {
+  void udp_server::enqueue_response(shared_session session, std::shared_ptr<T> data) {
 
     // Explicitly capturing both objects we ensure they live as long as this
     // lambda. The standard guarantees that explicit captures are not optimized
@@ -154,5 +153,6 @@ namespace detail {
         _strand.wrap(handle_sent));
   }
 
+} // namespace strm_asio
 } // namespace detail
 } // namespace strm

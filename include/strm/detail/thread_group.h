@@ -3,7 +3,8 @@
 #include <thread>
 #include <vector>
 
-namespace util {
+namespace strm {
+namespace detail {
 
   class thread_group {
   public:
@@ -41,4 +42,5 @@ namespace util {
     std::vector<std::thread> _threads;
   };
 
-} // namespace util
+} // namespace detail
+} // namespace strm

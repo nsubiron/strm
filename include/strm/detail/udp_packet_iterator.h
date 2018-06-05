@@ -1,6 +1,6 @@
 #pragma once
 
-#include "udp_packet.h"
+#include "strm/detail/udp_packet.h"
 
 #include <boost/asio/buffer.hpp>
 

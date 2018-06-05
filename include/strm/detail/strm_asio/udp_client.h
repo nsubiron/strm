@@ -1,7 +1,7 @@
 #pragma once
 
-#include "token.h"
-#include "udp_packet.h"
+#include "strm/detail/token.h"
+#include "strm/detail/udp_packet.h"
 
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/udp.hpp>
@@ -10,14 +10,15 @@
 
 namespace strm {
 namespace detail {
+namespace strm_asio {
 
   /// Not yet async, barely a client.
-  class async_udp_client {
+  class udp_client {
   public:
 
     using endpoint = boost::asio::ip::udp::endpoint;
 
-    explicit async_udp_client(boost::asio::io_service &io_service, endpoint ep)
+    explicit udp_client(boost::asio::io_service &io_service, endpoint ep)
       : _endpoint(std::move(ep)),
         _socket(io_service) {
       _socket.open(_endpoint.protocol());
@@ -46,6 +47,7 @@ namespace detail {
     boost::asio::ip::udp::socket _socket;
   };
 
+} // namespace strm_asio
 } // namespace detail
 } // namespace strm
 

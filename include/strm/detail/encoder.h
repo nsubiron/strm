@@ -1,6 +1,6 @@
 #pragma once
 
-#include "udp_packet_iterator.h"
+#include "strm/detail/udp_packet_iterator.h"
 
 #include <atomic>
 #include <exception>
