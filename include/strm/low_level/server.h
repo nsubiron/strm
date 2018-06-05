@@ -8,9 +8,9 @@ namespace strm {
 namespace low_level {
 
   class server {
+    using underlying_server = strm::detail::strm_asio::udp_server;
   public:
 
-    using underlying_server = strm::detail::strm_asio::udp_server;
     using endpoint = underlying_server::endpoint;
 
     explicit server(boost::asio::io_service &io_service, const endpoint &ep)

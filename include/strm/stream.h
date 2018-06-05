@@ -1,7 +1,8 @@
 #pragma once
 
-#include "detail/stream_state.h"
-#include "detail/token.h"
+#include "strm/detail/message.h"
+#include "strm/detail/stream_state.h"
+#include "strm/detail/token.h"
 
 #include <boost/asio/buffer.hpp>
 
@@ -29,13 +30,14 @@ namespace low_level {
       return _shared_state->token();
     }
 
-    bool write(boost::asio::const_buffer buffer) {
-      return _shared_state->write(buffer);
+    template <typename ConstBufferSequence>
+    bool write(ConstBufferSequence buffer) {
+      return _shared_state->write(std::make_shared<strm::detail::message>(buffer));
     }
 
     template <typename T>
-    stream &operator<<(T &&rhs) {
-      write(boost::asio::buffer(std::forward<T>(rhs)));
+    stream &operator<<(const T &rhs) {
+      write(boost::asio::buffer(rhs));
       return *this;
     }
 

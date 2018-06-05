@@ -1,6 +1,7 @@
 #pragma once
 
 #include "strm/detail/encoder.h"
+#include "strm/detail/message.h"
 #include "strm/detail/session.h"
 #include "strm/detail/token.h"
 
@@ -38,22 +39,22 @@ namespace detail {
   class stream_state : public session_holder {
   public:
 
-    explicit stream_state(token_type token) : _token(token) {}
+    explicit stream_state(const token_type &token) : _token(token) {}
 
     stream_state(const stream_state &) = delete;
     stream_state &operator=(const stream_state &) = delete;
 
-    token_type token() const {
+    const token_type &token() const {
       return _token;
     }
 
-    bool write(boost::asio::const_buffer buffer) {
+    bool write(std::shared_ptr<const message> data) {
+      /// @todo this function can already be async.
       auto session = get_session();
       if (session == nullptr) {
         return false;
       }
-      for (auto &packet : _encoder.split_message(buffer)) {
-        /// @todo temporary, we shouldn't create objects all the time.
+      for (auto &packet : _encoder.split_message(data->buffer())) {
         session->enqueue_response(std::make_shared<udp_packet>(packet));
       }
       return true;
