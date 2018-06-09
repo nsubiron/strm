@@ -1,25 +1,44 @@
 #pragma once
 
-#include "strm/detail/strm_asio/udp_client.h"
+#include "strm/detail/thread_group.h"
+#include "strm/detail/token.h"
+#include "strm/low_level/client.h"
 
-#include <string>
+#include <boost/asio/io_service.hpp>
 
 namespace strm {
 
-  class client : public strm::detail::strm_asio::udp_client {
+  class client {
   public:
 
-    using underlying_client = strm::detail::strm_asio::udp_client;
-    using endpoint = underlying_client::endpoint;
+    explicit client(const token_type &token)
+      : _client(_io_service, token) {}
 
-    explicit client(boost::asio::io_service &io_service, endpoint ep)
-      : underlying_client(io_service, std::move(ep)) {}
+    template <typename F>
+    void listen(F &&callback) {
+      _client.listen(std::forward<F>(callback));
+    }
 
-    explicit client(boost::asio::io_service &io_service, const std::string &host, uint16_t port)
-      : client(io_service, endpoint(boost::asio::ip::address::from_string(host), port)) {}
+    void run() {
+      _io_service.run();
+    }
 
-    explicit client(boost::asio::io_service &io_service, uint16_t port)
-      : client(io_service, "127.0.0.1", port) {}
+    void async_run(std::size_t worker_threads) {
+      _workers.create_threads(worker_threads, [this](){ run(); });
+    }
+
+    void stop() {
+      _io_service.stop();
+      _workers.join_all();
+    }
+
+  private:
+
+    boost::asio::io_service _io_service;
+
+    strm::low_level::client _client;
+
+    strm::detail::thread_group _workers;
   };
 
 } // namespace strm

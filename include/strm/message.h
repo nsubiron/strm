@@ -6,7 +6,6 @@
 #include <memory>
 
 namespace strm {
-namespace detail {
 
   /// A message owns a buffer with raw data.
   class message : public std::enable_shared_from_this<message> {
@@ -27,13 +26,13 @@ namespace detail {
 
     message() = default;
 
-    message(const message &) = delete;
-    message &operator=(const message &) = delete;
+    explicit message(size_t size)
+      : _size(size),
+        _data(std::make_unique<value_type[]>(_size)) {}
 
     template <typename ConstBufferSequence>
     explicit message(ConstBufferSequence source)
-      : _size(boost::asio::buffer_size(source)),
-        _data(std::make_unique<value_type[]>(_size)) {
+      : message(boost::asio::buffer_size(source)) {
 #ifndef NDEBUG
       auto bytes_copied =
 #endif // NDEBUG
@@ -42,6 +41,9 @@ namespace detail {
       assert(bytes_copied == size());
 #endif // NDEBUG
     }
+
+    message(const message &) = delete;
+    message &operator=(const message &) = delete;
 
     // =========================================================================
     // -- Data access ----------------------------------------------------------
@@ -56,8 +58,6 @@ namespace detail {
       return _data.get();
     }
 
-  private:
-
     value_type *data() {
       return _data.get();
     }
@@ -70,8 +70,6 @@ namespace detail {
     boost::asio::const_buffer buffer() const {
       return {data(), size()};
     }
-
-  private:
 
     boost::asio::mutable_buffer buffer() {
       return {data(), size()};
@@ -87,5 +85,4 @@ namespace detail {
     std::unique_ptr<value_type[]> _data = nullptr;
   };
 
-} // namespace detail
 } // namespace strm

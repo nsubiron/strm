@@ -3,11 +3,9 @@
 #include "strm/detail/strm_asio/endpoint_token.h"
 
 namespace strm {
-namespace detail {
 
-  class dispatcher;
-
-} // namespace detail
+namespace detail { class dispatcher; }
+namespace low_level { class client; }
 
   /// Contains the necessary information for a client to subscribe to a stream.
   /// The token can be treated as a plain data, contains no dynamic memory.
@@ -19,7 +17,8 @@ namespace detail {
 
   private:
 
-    friend class detail::dispatcher;
+    friend class strm::detail::dispatcher;
+    friend class strm::low_level::client;
 
     using stream_id_type = uint32_t;
 

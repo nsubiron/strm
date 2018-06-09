@@ -1,9 +1,9 @@
 #pragma once
 
 #include "strm/detail/encoder.h"
-#include "strm/detail/message.h"
 #include "strm/detail/session.h"
 #include "strm/detail/token.h"
+#include "strm/message.h"
 
 #include <memory>
 #include <mutex>
