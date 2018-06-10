@@ -27,7 +27,7 @@ namespace detail {
 
       // Ceil to the nearest integer. If length is zero, number_of_packets = 1.
       const size_t number_of_packets = 1u + ((length - 1u) / packet_capacity);
-      assert(number_of_packets * udp_packet::numeric_limits::packet_capacity() > length);
+      assert(number_of_packets * udp_packet::numeric_limits::packet_capacity() >= length);
       const size_t remainder = length - (number_of_packets - 1u) * packet_capacity;
 
       _packet.reset(message_id, number_of_packets, remainder);

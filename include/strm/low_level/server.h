@@ -7,6 +7,8 @@
 namespace strm {
 namespace low_level {
 
+  class server_inspector;
+
   class server {
     using underlying_server = strm::detail::strm_asio::udp_server;
   public:
@@ -32,6 +34,8 @@ namespace low_level {
     }
 
   private:
+
+    friend class server_inspector;
 
     underlying_server _server;
 

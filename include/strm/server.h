@@ -19,6 +19,10 @@ namespace strm {
     explicit server(const std::string &address, uint16_t port)
       : _server(_io_service, address, port) {}
 
+    ~server() {
+      stop();
+    }
+
     stream make_stream() {
       return _server.make_stream();
     }
@@ -37,6 +41,8 @@ namespace strm {
     }
 
   private:
+
+    friend class strm::low_level::server_inspector;
 
     boost::asio::io_service _io_service;
 

@@ -1,3 +1,4 @@
+#include <strm/detail/decoder.h>
 #include <strm/detail/encoder.h>
 
 #include "util/message.h"
@@ -9,60 +10,64 @@
 #include <memory>
 #include <random>
 
-TEST(encoder, big_message) {
-  using udp_packet = strm::detail::udp_packet;
+using udp_datagram = strm::detail::udp_packet;
+using namespace util::message;
 
-  auto message = util::message::make_random(1920u * 1080u * 4u);
-
-  const auto expected_number_of_packets =
-      1u + ((message.size() - 1u) / udp_packet::numeric_limits::packet_capacity());
-
-  std::vector<udp_packet> packets;
-  packets.reserve(expected_number_of_packets);
-
-  // encode.
-  {
-    strm::detail::encoder enc;
-    util::stop_watch sw;
-
-    auto splitter = enc.split_message(message.buffer());
-    ASSERT_GT(splitter.number_of_packets(), 0u);
-    ASSERT_EQ(splitter.number_of_packets(), expected_number_of_packets);
-    for (auto &packet : splitter) {
-      packets.emplace_back(packet);
-    }
-
-    sw.Stop();
-    ASSERT_EQ(packets.size(), splitter.number_of_packets());
-    std::cout << "encoding " << splitter << " took " << sw.GetElapsedTime() << "ms\n";
+static std::vector<udp_datagram> encode(boost::asio::const_buffer buffer) {
+  strm::detail::encoder enc;
+  std::vector<udp_datagram> packets;
+  auto splitter = enc.split_message(buffer);
+  packets.reserve(splitter.number_of_packets());
+  for (auto &packet : splitter) {
+    packets.emplace_back(packet);
   }
+  EXPECT_EQ(packets.size(), splitter.number_of_packets());
+  return packets;
+}
 
-  // shuffle data.
-  {
-    std::random_device rd;
-    std::minstd_rand g(rd());
-    std::shuffle(packets.begin(), packets.end(), g);
+static shared_message decode(const std::vector<udp_datagram> &packets) {
+  constexpr auto PAYLOAD = 512u;
+  static_assert(PAYLOAD == sizeof(udp_datagram), "Invalid datagram size!");
+  shared_message result;
+  strm::detail::decoder dec(PAYLOAD, [&result](shared_message msg){
+    result = std::move(msg);
+  });
+  for (auto &datagram : packets) {
+    dec.parse(reinterpret_cast<const unsigned char *>(&datagram), sizeof(datagram));
   }
+  EXPECT_NE(result, nullptr);
+  return result;
+}
 
-  // decode.
-  util::message result;
-  {
-    const auto message_size = packets[0u].message_size();
-    ASSERT_EQ(packets[0u].total_number_of_packets(), packets.size());
+static void shuffle(std::vector<udp_datagram> &packets) {
+  std::random_device rd;
+  std::minstd_rand g(rd());
+  std::shuffle(packets.begin(), packets.end(), g);
+}
 
-    result = util::message::make_empty(message_size);
-    unsigned char * const begin = result.data();
-
-    for (const auto &pack : packets) {
-      const auto i = pack.packet_number();
-      constexpr size_t packet_capacity = udp_packet::numeric_limits::packet_capacity();
-      ASSERT_LT((i * packet_capacity), message_size);
-      void *dest = begin + (i * packet_capacity);
-      std::memcpy(dest, pack.data(), pack.size());
-    }
+TEST(encoder, single_datagram) {
+  for (auto i = 0u; i < 10'000u; ++i) {
+    std::string message = "Hello!";
+    auto packets = encode(boost::asio::buffer(message));
+    ASSERT_EQ(packets.size(), 1u);
+    auto result = decode(packets);
+    ASSERT_EQ(message, as_string(*result));
   }
+}
 
-  ASSERT_TRUE(result == message)
-      << "\nmessage: " << message
-      << "\nresult:  " << result;
+TEST(encoder, image_1920x1080) {
+  constexpr auto message_size = 1920u * 1080u * 4u;
+  constexpr auto expected_number_of_packets =
+      1u + ((message_size - 1u) / udp_datagram::numeric_limits::packet_capacity());
+
+  for (auto i = 0u; i < 10u; ++i) {
+    auto message = make_random(message_size);
+    auto packets = encode(message->buffer());
+    ASSERT_EQ(packets.size(), expected_number_of_packets);
+    shuffle(packets);
+    auto result = decode(packets);
+    ASSERT_TRUE(*message == *result)
+        << "\nmessage: " << *message
+        << "\nresult:  " << *result;
+  }
 }

@@ -4,38 +4,36 @@
 #include <random>
 
 namespace util {
+namespace message {
 
-  message message::make_empty(size_t size) {
+  shared_message make_empty(size_t size) {
     return size == 0u ?
-        message() :
-        message(size, std::make_unique<message::value_type[]>(size));
+        std::make_shared<strm::message>() :
+        std::make_shared<strm::message>(size);
   }
 
-  message message::make_random(size_t size) {
+  shared_message make_random(size_t size) {
+    if (size == 0u)
+      return make_empty();
     using random_bytes_engine = std::independent_bits_engine<
-      std::default_random_engine,
-      CHAR_BIT,
-      unsigned char>;
+        std::default_random_engine,
+        CHAR_BIT,
+        unsigned char>;
     random_bytes_engine rbe;
     auto message = make_empty(size);
-    std::generate(message.begin(), message.end(), std::ref(rbe));
+    std::generate(begin(*message), end(*message), std::ref(rbe));
     return message;
   }
 
-  message message::make_from_buffer(boost::asio::const_buffer buffer) {
-    auto copy = make_empty(buffer.size());
-    std::memcpy(copy.data(), buffer.data(), buffer.size());
-    return copy;
-  }
-
-  std::string message::to_hex_string(size_t length) const {
-    length = std::min(size(), length);
+  std::string to_hex_string(const strm::message &msg, size_t length) {
+    length = std::min(msg.size(), length);
     auto buffer = std::make_unique<char[]>(2u * length + 1u);
     for (auto i = 0u; i < length; ++i)
-      sprintf(&buffer[2u * i], "%02x", data()[i]);
-    if (length < size())
+      sprintf(&buffer[2u * i], "%02x", msg.data()[i]);
+    if (length < msg.size())
       return std::string(buffer.get()) + std::string("...");
     return std::string(buffer.get());
   }
 
+} // namespace message
 } // namespace util

@@ -44,3 +44,6 @@ script:
   - cmake --build .
   - ./strm_test_debug
   - ./strm_test_release
+
+notifications:
+  email: false

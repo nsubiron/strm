@@ -14,6 +14,10 @@ namespace strm {
     explicit client(const token_type &token)
       : _client(_io_service, token) {}
 
+    ~client() {
+      stop();
+    }
+
     template <typename F>
     void listen(F &&callback) {
       _client.listen(std::forward<F>(callback));

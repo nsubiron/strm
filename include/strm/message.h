@@ -8,7 +8,7 @@
 namespace strm {
 
   /// A message owns a buffer with raw data.
-  class message : public std::enable_shared_from_this<message> {
+  class message {
 
     // =========================================================================
     // -- Typedefs -------------------------------------------------------------
@@ -44,6 +44,19 @@ namespace strm {
 
     message(const message &) = delete;
     message &operator=(const message &) = delete;
+
+    message(message &&rhs) noexcept
+      : _size(rhs._size),
+        _data(std::move(rhs._data)) {
+      rhs._size = 0u;
+    }
+
+    message &operator=(message &&rhs) noexcept {
+      _size = rhs._size;
+      _data = std::move(rhs._data);
+      rhs._size = 0u;
+      return *this;
+    }
 
     // =========================================================================
     // -- Data access ----------------------------------------------------------

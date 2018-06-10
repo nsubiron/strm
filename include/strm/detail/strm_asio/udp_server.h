@@ -4,8 +4,9 @@
 #include <boost/asio/io_service_strand.hpp>
 #include <boost/asio/ip/udp.hpp>
 
+#include <atomic>
+#include <iostream> /// @todo
 #include <memory>
-#include <iostream>
 
 namespace strm {
 namespace detail {
@@ -47,6 +48,14 @@ namespace strm_asio {
       post([=](){ open_session(callback); });
     }
 
+    size_t get_bytes_sent() const {
+      return _bytes_sent;
+    }
+
+    size_t get_datagrams_sent() const {
+      return _datagrams_sent;
+    }
+
   private:
 
     friend udp_session;
@@ -66,6 +75,10 @@ namespace strm_asio {
     boost::asio::ip::udp::socket _socket;
 
     boost::asio::io_service::strand _strand;
+
+    std::atomic_size_t _bytes_sent{0u};
+
+    std::atomic_size_t _datagrams_sent{0u};
   };
 
   /// ==========================================================================
@@ -140,10 +153,13 @@ namespace strm_asio {
     // Explicitly capturing both objects we ensure they live as long as this
     // lambda. The standard guarantees that explicit captures are not optimized
     // away.
-    auto handle_sent = [session, data](const error_code &ec, size_t) {
+    auto handle_sent = [this, session, data](const error_code &ec, size_t bytes_sent) {
       if (ec) {
         std::cerr << "Error sending response to " << session->_remote_endpoint
                   << ": " << ec.message() << "\n";
+      } else {
+        _bytes_sent += bytes_sent;
+        ++_datagrams_sent;
       }
     };
 
