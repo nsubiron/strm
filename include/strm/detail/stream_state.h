@@ -1,6 +1,7 @@
 #pragma once
 
 #include "strm/detail/encoder.h"
+#include "strm/detail/profiler.h"
 #include "strm/detail/session.h"
 #include "strm/detail/token.h"
 #include "strm/message.h"
@@ -54,8 +55,11 @@ namespace detail {
       if (session == nullptr) {
         return false;
       }
-      for (auto &packet : _encoder.split_message(data->buffer())) {
-        session->enqueue_response(std::make_shared<udp_packet>(packet));
+      {
+        STRM_PROFILE_SCOPE(server, encode_and_enqueue);
+        for (auto &packet : _encoder.split_message(data->buffer())) {
+          session->enqueue_response(std::make_shared<udp_packet>(packet));
+        }
       }
       return true;
     }
