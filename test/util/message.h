@@ -11,6 +11,7 @@ namespace util {
 namespace message {
 
   using shared_message = std::shared_ptr<strm::message>;
+  using const_shared_message = std::shared_ptr<const strm::message>;
 
   static inline shared_message make_empty() {
     return std::make_shared<strm::message>();

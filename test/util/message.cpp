@@ -16,7 +16,7 @@ namespace message {
     if (size == 0u)
       return make_empty();
     using random_bytes_engine = std::independent_bits_engine<
-        std::default_random_engine,
+        std::random_device,
         CHAR_BIT,
         unsigned char>;
     random_bytes_engine rbe;
