@@ -62,6 +62,21 @@ ExternalProject_Add(googletest
     BUILD_COMMAND ${CMAKE_COMMAND} --build . --target install
     BUILD_BYPRODUCTS ${googletest_static_library})
 
+# download and build rpclib.
+
+set(rpclib_install_folder "${CMAKE_BINARY_DIR}/rpclib-install")
+set(rpclib_include_folder "${rpclib_install_folder}/include")
+set(rpclib_static_library "${rpclib_install_folder}/lib/librpc.a")
+ExternalProject_Add(rpclib
+    GIT_REPOSITORY https://github.com/rpclib/rpclib
+    GIT_TAG v2.2.1
+    SOURCE_DIR "${CMAKE_BINARY_DIR}/rpclib-src"
+    BINARY_DIR "${CMAKE_BINARY_DIR}/rpclib-build"
+    INSTALL_DIR ${rpclib_install_folder}
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${rpclib_install_folder}
+    BUILD_COMMAND ${CMAKE_COMMAND} --build . --target install
+    BUILD_BYPRODUCTS ${rpclib_static_library})
+
 # strm unit tests target.
 
 file(GLOB_RECURSE strm_test_sources
@@ -71,15 +86,20 @@ file(GLOB_RECURSE strm_test_sources
 include_directories(${boost_asio_include_folder})
 include_directories(${strm_include_folder})
 include_directories(${googletest_include_folder})
+include_directories(${rpclib_include_folder})
 
 add_executable(strm_test_debug ${strm_test_sources})
 set_target_properties(strm_test_debug PROPERTIES COMPILE_FLAGS ${CXX_FLAGS_DEBUG})
-target_link_libraries(strm_test_debug ${googletest_static_library})
-add_dependencies(strm_test_debug boost_asio googletest)
+target_link_libraries(strm_test_debug
+    ${googletest_static_library}
+    ${rpclib_static_library})
+add_dependencies(strm_test_debug boost_asio googletest rpclib)
 install(TARGETS strm_test_debug DESTINATION test)
 
 add_executable(strm_test_release ${strm_test_sources})
 set_target_properties(strm_test_release PROPERTIES COMPILE_FLAGS ${CXX_FLAGS_RELEASE})
-target_link_libraries(strm_test_release ${googletest_static_library})
-add_dependencies(strm_test_release boost_asio googletest)
+target_link_libraries(strm_test_release
+    ${googletest_static_library}
+    ${rpclib_static_library})
+add_dependencies(strm_test_release boost_asio googletest rpclib)
 install(TARGETS strm_test_release DESTINATION test)

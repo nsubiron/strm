@@ -3,8 +3,8 @@ PROFILER_DATA_FOLDER=$(CURDIR)/.profiler
 CMAKE_GENERATOR="Ninja"
 GIT_TAG=`git describe --tags --dirty --always`
 
-export CC=clang
-export CXX=clang++
+export CC=clang-5.0
+export CXX=clang++-5.0
 
 build: _call_cmake
 
